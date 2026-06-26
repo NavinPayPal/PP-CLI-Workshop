@@ -1,0 +1,24 @@
+app = "paypal-workshop-leaderboard"
+primary_region = "sjc"
+
+[build]
+  builder = "node"
+
+[http_service]
+  internal_port = 3002
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3002"
+  # Set QUEST_URL after deploying the quest service:
+  # fly secrets set QUEST_URL=https://your-quest-app.fly.dev
+  QUEST_URL = "http://localhost:3001"

@@ -1,0 +1,25 @@
+{
+  "name": "paypal-cli-workshop",
+  "version": "1.0.0",
+  "description": "AI Engineer SF — Agentic CLI Workshop",
+  "private": true,
+  "workspaces": ["node-cli", "leaderboard"],
+  "scripts": {
+    "install:all": "npm install",
+    "preflight": "node scripts/preflight.js",
+    "preflight:fix": "node scripts/preflight.js --fix",
+    "brew": "node node-cli/src/index.js brew",
+    "brew:as-agent": "WORKSHOP_AGENT_MODE=1 node node-cli/src/index.js brew-solution 2>events.jsonl & cat events.jsonl",
+    "check": "node evals/brew.eval.js",
+    "check:paypal": "node evals/paypal.eval.js",
+    "cockpit": "bash scripts/tmux-workshop.sh",
+    "start:leaderboard": "npm run start --workspace=leaderboard",
+    "start:all": "concurrently \"npm run start:quest\" \"npm run start:leaderboard\"",
+    "workshop:start": "node scripts/preflight.js --fix && concurrently --names \"quest,leaderboard\" \"npm run start:quest\" \"npm run start:leaderboard\"",
+    "workshop:tmux": "bash scripts/tmux-workshop.sh",
+    "cli": "node node-cli/src/index.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

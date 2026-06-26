@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Engineer SF — Agentic CLI Workshop</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0A0E1A;
+      --surface:  #111827;
+      --surface2: #1C2333;
+      --border:   #1E2D45;
+      --text:     #E8ECF4;
+      --muted:    #6B7A99;
+      --dim:      #2E3A52;
+      --cyan:     #00C2FF;
+      --green:    #00E5A0;
+      --orange:   #FF8C42;
+      --red:      #FF4757;
+      --purple:   #9B59FF;
+      --yellow:   #FFD166;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ────────────────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .header-title { font-size: 1.1rem; color: var(--cyan); letter-spacing: 0.05em; }
+    .header-sub   { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .status-dot   { width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+                    display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .live-badge { font-size: 0.75rem; color: var(--green); display: flex; align-items: center; }
+
+    /* ── Tabs ──────────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .tab {
+      padding: 0.7rem 1.5rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+    .tab-count {
+      display: inline-block;
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 1px 7px;
+      font-size: 0.7rem;
+      margin-left: 6px;
+      color: var(--muted);
+    }
+    .tab.active .tab-count { background: var(--cyan); color: var(--bg); }
+
+    /* ── Main layout ───────────────────────────────────────────── */
+    main {
+      flex: 1;
+      display: flex;
+      gap: 0;
+      overflow: hidden;
+      padding: 1.25rem 2rem;
+    }
+
+    /* ── Views ─────────────────────────────────────────────────── */
+    .view { display: none; width: 100%; height: 100%; }
+    .view.active { display: flex; gap: 1.25rem; }
+
+    /* ── Progress view layout ──────────────────────────────────── */
+    #view-progress {
+      flex-direction: row;
+    }
+    .progress-left  { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.6rem; }
+    .progress-right { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 1rem; }
+
+    /* ── Attendee card ─────────────────────────────────────────── */
+    .attendee-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      transition: border-color 0.3s, transform 0.2s;
+    }
+    .attendee-card.just-updated {
+      border-color: var(--green);
+      transform: translateX(4px);
+    }
+    .attendee-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .attendee-rank  { font-size: 1.1rem; font-weight: bold; color: var(--muted); width: 2rem; }
+    .attendee-name  { font-size: 1rem; font-weight: bold; flex: 1; }
+    .attendee-score { font-size: 1rem; color: var(--green); font-weight: bold; }
+    .attendee-meta  {
+      display: flex; gap: 1rem; font-size: 0.72rem;
+      color: var(--muted); margin-bottom: 0.5rem;
+    }
+    .meta-tpok  { color: var(--purple); }
+    .meta-speed { color: var(--yellow); }
+
+    /* ── Task pills ────────────────────────────────────────────── */
+    .task-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .pill {
+      font-size: 0.72rem;
+      padding: 3px 9px;
+      border-radius: 12px;
+      border: 1px solid var(--dim);
+      color: var(--dim);
+      transition: all 0.3s;
+    }
+    .pill.done { color: var(--bg); border-color: transparent; }
+    .pill.done.exercise { background: var(--cyan); }
+    .pill.done.demo     { background: var(--orange); }
+    .pill.done.eval     { background: var(--green); color: var(--bg); }
+    .pill.done.paypal   { background: var(--purple); }
+    .pill.done.bonus    { background: var(--orange); }
+
+    /* ── Progress bar ──────────────────────────────────────────── */
+    .progress-bar-wrap {
+      height: 4px;
+      background: var(--dim);
+      border-radius: 2px;
+      margin-top: 0.6rem;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--cyan), var(--green));
+      transition: width 0.5s ease;
+    }
+
+    /* ── Right panel: task legend + feed ──────────────────────── */
+    .panel-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .panel-title {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    .task-legend-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.8rem;
+    }
+    .legend-pill {
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .legend-pill.exercise { background: var(--cyan);   color: var(--bg); }
+    .legend-pill.demo     { background: var(--orange);  color: var(--bg); }
+    .legend-pill.eval     { background: var(--green);   color: var(--bg); }
+    .legend-pill.paypal   { background: var(--purple);  color: var(--bg); }
+    .legend-pill.bonus    { background: var(--orange);  color: var(--bg); }
+    .legend-desc { color: var(--muted); line-height: 1.4; }
+    .legend-pts  { color: var(--dim); font-size: 0.7rem; margin-left: auto; white-space: nowrap; }
+
+    /* ── Event feed ────────────────────────────────────────────── */
+    .feed { overflow-y: auto; max-height: 220px; }
+    .feed-item {
+      font-size: 0.78rem;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .feed-item.highlight { color: var(--green); }
+    .feed-item.game      { color: var(--orange); }
+    .feed-item.join      { color: var(--cyan); }
+
+    /* ── Stats row ─────────────────────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }    .stat-box {
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 0.6rem 0.75rem;
+    }
+    .stat-val  { font-size: 1.4rem; font-weight: bold; }
+    .stat-lbl  { font-size: 0.7rem; color: var(--muted); }
+    .stat-cyan   .stat-val { color: var(--cyan); }
+    .stat-green  .stat-val { color: var(--green); }
+    .stat-orange .stat-val { color: var(--orange); }
+    .stat-purple .stat-val { color: var(--purple); }
+    .stat-yellow .stat-val { color: #f9c74f; }
+
+    /* ── Game view ─────────────────────────────────────────────── */
+    #view-game { flex-direction: row; gap: 1.25rem; }
+    .game-board { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.6rem; }
+    .game-right { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 1rem; }
+    .game-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1.1rem;
+      display: grid;
+      grid-template-columns: 2.5rem 1fr 6rem 5rem;
+      align-items: center;
+      transition: border-color 0.3s;
+    }
+    .game-row.rank-1 { border-color: var(--yellow); }
+    .game-row.rank-2 { border-color: var(--purple); }
+    .game-row.rank-3 { border-color: var(--cyan); }
+    .game-rank   { font-size: 1.2rem; font-weight: bold; color: var(--muted); }
+    .game-rank.r1 { color: var(--yellow); }
+    .game-rank.r2 { color: var(--purple); }
+    .game-rank.r3 { color: var(--cyan); }
+    .game-name   { font-size: 1rem; font-weight: bold; }
+    .game-creds  { font-size: 1.1rem; color: var(--green); text-align: right; font-weight: bold; }
+    .game-power  { font-size: 0.85rem; color: var(--orange); text-align: right; }
+    .game-empty  { color: var(--dim); text-align: center; padding: 3rem; font-size: 1rem; }
+
+    /* ── Scrollbar ─────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="header-title">🛠️ AI Engineer SF — Agentic CLI Workshop</div>
+    <div class="header-sub" id="header-sub">Connecting...</div>
+  </div>
+  <div class="live-badge"><span class="status-dot"></span>LIVE</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-view="progress" onclick="switchView('progress')">
+    Workshop Progress <span class="tab-count" id="tab-attendee-count">0</span>
+  </div>
+  <div class="tab" data-view="game" onclick="switchView('game')">
+    PayPal Quest <span class="tab-count" id="tab-player-count">0</span>
+  </div>
+</div>
+
+<main>
+
+  <!-- ── VIEW: Workshop Progress ──────────────────────────────── -->
+  <div id="view-progress" class="view active">
+
+    <div class="progress-left" id="attendee-list">
+      <div style="color:var(--dim);text-align:center;padding:3rem;font-size:1rem;">
+        Waiting for attendees...<br><br>
+        <span style="font-size:0.8rem">Run: <span style="color:var(--cyan)">node cli/src/index.js workshop:checkin</span></span>
+      </div>
+    </div>
+
+    <div class="progress-right">
+
+      <div class="panel-box">
+        <div class="panel-title">Stats</div>
+        <div class="stats-row">
+          <div class="stat-box stat-cyan">
+            <div class="stat-val" id="stat-attendees">0</div>
+            <div class="stat-lbl">Attendees</div>
+          </div>
+          <div class="stat-box stat-green">
+            <div class="stat-val" id="stat-completions">0</div>
+            <div class="stat-lbl">Tasks done</div>
+          </div>
+          <div class="stat-box stat-orange">
+            <div class="stat-val" id="stat-evals">0</div>
+            <div class="stat-lbl">Evals ✓</div>
+          </div>
+          <div class="stat-box stat-purple">
+            <div class="stat-val" id="stat-best-tpok">—</div>
+            <div class="stat-lbl">Best TPOK</div>
+          </div>
+          <div class="stat-box stat-yellow" style="--yellow:#f9c74f;">
+            <div class="stat-val" id="stat-best-speed">—</div>
+            <div class="stat-lbl">Fastest (s)</div>
+          </div>
+          <div class="stat-box stat-quests-box stat-orange">
+            <div class="stat-val" id="stat-quests">0</div>
+            <div class="stat-lbl">Quest runs</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-box" style="flex:1;display:flex;flex-direction:column;">
+        <div class="panel-title">Tasks</div>
+        <div id="task-legend"></div>
+      </div>
+
+      <div class="panel-box" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+        <div class="panel-title">Live Feed</div>
+        <div class="feed" id="event-feed"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── VIEW: PayPal Quest ────────────────────────────────────── -->
+  <div id="view-game" class="view">
+
+    <div class="game-board" id="game-board">
+      <div class="game-empty">
+        Quest service not running yet.<br><br>
+        <span style="font-size:0.8rem;color:var(--muted)">Start: <span style="color:var(--orange)">cd quest && node server.js</span></span>
+      </div>
+    </div>
+
+    <div class="game-right">
+      <div class="panel-box">
+        <div class="panel-title">Stats</div>
+        <div class="stats-row">
+          <div class="stat-box stat-orange">
+            <div class="stat-val" id="game-stat-players">0</div>
+            <div class="stat-lbl">Players</div>
+          </div>
+          <div class="stat-box stat-cyan">
+            <div class="stat-val" id="game-stat-round">—</div>
+            <div class="stat-lbl">Round</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-box" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+        <div class="panel-title">Game Feed</div>
+        <div class="feed" id="game-feed"></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // ── State ───────────────────────────────────────────────────────────────────
+  const TASKS = [
+    { id:'todo_1',           label:'TODO-1',          desc:'Add emitPrompt()',          section:'exercise', pts:10 },
+    { id:'todo_2',           label:'TODO-2',          desc:'Add isAgent()',             section:'exercise', pts:10 },
+    { id:'todo_3',           label:'TODO-3',          desc:'Add FlowState',             section:'exercise', pts:15 },
+    { id:'todo_4',           label:'TODO-4',          desc:'Add emitComplete()',        section:'exercise', pts:10 },
+    { id:'eval_pass',        label:'Evals ✓',         desc:'7/7 sandwich tests pass',  section:'eval',     pts:25 },
+    { id:'checkout_todo_1',  label:'PAY-1',           desc:'getAccessToken()',          section:'paypal',   pts:15 },
+    { id:'checkout_todo_2',  label:'PAY-2',           desc:'createOrder() v2 API',     section:'paypal',   pts:15 },
+    { id:'checkout_todo_3',  label:'PAY-3',           desc:'captureOrder()',            section:'paypal',   pts:15 },
+    { id:'checkout_todo_4',  label:'PAY-4',           desc:'emitComplete w/ receipt',  section:'paypal',   pts:10 },
+    { id:'checkout_eval',    label:'Checkout ✓',      desc:'All PayPal evals pass',    section:'eval',     pts:25 },
+    { id:'quest_play',       label:'quest:play',      desc:'Played a round',           section:'bonus',    pts:10 },
+    { id:'quest_checkout',   label:'Full Checkout',   desc:'Live PayPal demo done',    section:'bonus',    pts:15 },
+  ];
+
+  let progressData = { attendees: [] };
+  let gameData     = { players: [] };
+  let currentView  = 'progress';
+
+  // ── Tabs ────────────────────────────────────────────────────────────────────
+  function switchView(view) {
+    currentView = view;
+    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.view === view));
+    document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === 'view-' + view));
+    if (view === 'game') refreshGame();
+  }
+
+  // ── Task legend ─────────────────────────────────────────────────────────────
+  function buildLegend() {
+    const el = document.getElementById('task-legend');
+    el.innerHTML = TASKS.map((t) => `
+      <div class="task-legend-row">
+        <span class="legend-pill ${t.section}">${t.label}</span>
+        <span class="legend-desc">${t.desc}</span>
+        <span class="legend-pts">+${t.pts}</span>
+      </div>`).join('');
+  }
+
+  function renderProgress() {
+    const list = document.getElementById('attendee-list');
+    const att  = progressData.attendees || [];
+
+    document.getElementById('tab-attendee-count').textContent = att.length;
+    document.getElementById('stat-attendees').textContent     = att.length;
+    document.getElementById('stat-completions').textContent   = att.reduce((s, a) => s + (a.tasks?.length || 0), 0);
+    document.getElementById('stat-evals').textContent         = att.filter((a) => a.tasks?.includes('eval_pass')).length;
+    document.getElementById('stat-quests').textContent        = att.filter((a) => a.tasks?.includes('quest_play')).length;
+
+    // Best TPOK and speed across attendees
+    const tokenValues = att.map((a) => a.tokens).filter((t) => t !== null && t !== undefined);
+    const speedValues = att.map((a) => a.elapsed_ms).filter((v) => v !== null && v !== undefined);
+    document.getElementById('stat-best-tpok').textContent =
+      tokenValues.length ? Math.min(...tokenValues) : '—';
+    document.getElementById('stat-best-speed').textContent =
+      speedValues.length ? (Math.min(...speedValues) / 1000).toFixed(1) : '—';
+
+    if (!att.length) {
+      list.innerHTML = `<div style="color:var(--dim);text-align:center;padding:3rem;font-size:1rem;">
+        Waiting for attendees...<br><br>
+        <span style="font-size:0.8rem">Run: <span style="color:var(--cyan)">node cli/src/index.js workshop:checkin</span></span>
+      </div>`;
+      return;
+    }
+
+    const bestTokens  = tokenValues.length ? Math.min(...tokenValues) : null;
+    const bestSpeed   = speedValues.length ? Math.min(...speedValues) : null;
+
+    list.innerHTML = att.map((a, i) => {
+      const doneTasks   = a.tasks || [];
+      const totalPts    = TASKS.reduce((s, t) => s + t.pts, 0);
+      const pct         = Math.round((a.score / totalPts) * 100);
+      const rankEmoji   = ['🥇','🥈','🥉'][i] || `${a.rank}.`;
+
+      // TPOK badge
+      let tpokBadge = '';
+      if (a.tokens !== null && a.tokens !== undefined) {
+        const tpokClass = a.tokens === bestTokens ? 'meta-tpok' : '';
+        const crown = a.tokens === bestTokens ? ' 👑' : '';
+        tpokBadge = `<span class="${tpokClass}">⚡ ${a.tokens} tok${crown}</span>`;
+      }
+
+      // Speed badge
+      let speedBadge = '';
+      if (a.elapsed_ms !== null && a.elapsed_ms !== undefined) {
+        const speedClass = a.elapsed_ms === bestSpeed ? 'meta-speed' : '';
+        const flag = a.elapsed_ms === bestSpeed ? ' 🏁' : '';
+        speedBadge = `<span class="${speedClass}">⏱ ${(a.elapsed_ms / 1000).toFixed(1)}s${flag}</span>`;
+      }
+
+      const metaRow = (tpokBadge || speedBadge)
+        ? `<div class="attendee-meta">${tpokBadge}${speedBadge}</div>`
+        : '';
+
+      const pills = TASKS.map((t) => {
+        const done = doneTasks.includes(t.id);
+        return `<span class="pill${done ? ' done ' + t.section : ''}">${t.label}</span>`;
+      }).join('');
+
+      return `
+        <div class="attendee-card" id="card-${a.key || a.name.toLowerCase().replace(/\s+/g,'-')}">
+          <div class="attendee-header">
+            <div class="attendee-rank">${rankEmoji}</div>
+            <div class="attendee-name">${a.name}</div>
+            <div class="attendee-score">${a.score} pts</div>
+          </div>
+          ${metaRow}
+          <div class="task-pills">${pills}</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" style="width:${pct}%"></div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Render game view ────────────────────────────────────────────────────────
+  function renderGame() {
+    const board   = document.getElementById('game-board');
+    const players = gameData.players || [];
+    document.getElementById('tab-player-count').textContent    = players.length;
+    document.getElementById('game-stat-players').textContent   = players.length;
+    document.getElementById('game-stat-round').textContent     = gameData.round ?? '—';
+
+    if (!players.length) {
+      board.innerHTML = `<div class="game-empty">
+        Quest service not running yet.<br><br>
+        <span style="font-size:0.8rem;color:var(--muted)">Start: <span style="color:var(--orange)">cd quest && node server.js</span></span>
+      </div>`;
+      return;
+    }
+    board.innerHTML = players.map((p) => `
+      <div class="game-row rank-${Math.min(p.rank, 4)}">
+        <div class="game-rank ${p.rank<=3?'r'+p.rank:''}">${['🥇','🥈','🥉'][p.rank-1] || p.rank}</div>
+        <div class="game-name">${p.name}</div>
+        <div class="game-creds">${p.credits} cr</div>
+        <div class="game-power">${p.powerups > 0 ? '⚡ ×' + p.powerups : ''}</div>
+      </div>`).join('');
+  }
+
+  // ── Feed ────────────────────────────────────────────────────────────────────
+  function addFeed(feedId, text, cls = '') {
+    const feed = document.getElementById(feedId);
+    if (!feed) return;
+    const el = document.createElement('div');
+    el.className = 'feed-item ' + cls;
+    el.textContent = new Date().toLocaleTimeString() + '  ' + text;
+    feed.prepend(el);
+    while (feed.children.length > 30) feed.removeChild(feed.lastChild);
+  }
+
+  function flashCard(name) {
+    const key = name.toLowerCase().replace(/\s+/g, '-');
+    const card = document.getElementById('card-' + key);
+    if (!card) return;
+    card.classList.add('just-updated');
+    setTimeout(() => card.classList.remove('just-updated'), 1200);
+  }
+
+  // ── Data fetching ───────────────────────────────────────────────────────────
+  async function refreshProgress() {
+    try {
+      const r = await fetch('/api/progress');
+      progressData = await r.json();
+      if (currentView === 'progress') renderProgress();
+      document.getElementById('header-sub').textContent =
+        `${progressData.attendees.length} attendees · ${progressData.attendees.reduce((s,a)=>s+(a.tasks?.length||0),0)} tasks complete`;
+    } catch {}
+  }
+
+  async function refreshGame() {
+    try {
+      const r = await fetch('/api/game');
+      gameData = await r.json();
+      renderGame();
+    } catch {}
+  }
+
+  // ── SSE ─────────────────────────────────────────────────────────────────────
+  const sse = new EventSource('/api/events');
+
+  sse.onopen = () => {
+    document.querySelector('.status-dot').style.background = 'var(--green)';
+    refreshProgress();
+    refreshGame();
+  };
+
+  sse.onerror = () => {
+    document.querySelector('.status-dot').style.background = 'var(--red)';
+    document.getElementById('header-sub').textContent = 'Reconnecting...';
+  };
+
+  sse.onmessage = (e) => {
+    let msg;
+    try { msg = JSON.parse(e.data); } catch { return; }
+
+    if (msg.event === 'task_complete' || msg.event === 'tasks_batch_complete') {
+      refreshProgress();
+      const src = msg.event === 'tasks_batch_complete' ? 'eval' : msg.data.source || 'cli';
+      const tasks = msg.event === 'tasks_batch_complete'
+        ? msg.data.new_tasks.join(', ')
+        : msg.data.task_label;
+      addFeed('event-feed',
+        `${msg.data.name} completed ${tasks} (${msg.data.score} pts) [${src}]`, 'highlight');
+      flashCard(msg.data.name);
+    }
+
+    if (msg.event === 'attendee_joined') {
+      refreshProgress();
+      addFeed('event-feed', `${msg.data.name} joined the workshop`, 'join');
+    }
+
+    if (msg.event === 'game_event') {
+      const ge = msg.data;
+      if (ge.event === 'answer_submitted') {
+        addFeed('game-feed',
+          `${ge.data.player_name} answered ${ge.data.correct ? '✓' : '✗'} (${ge.data.delta > 0 ? '+' : ''}${ge.data.delta} cr)`,
+          'game');
+        refreshGame();
+      } else if (ge.event === 'player_joined') {
+        addFeed('game-feed', `${ge.data.name} joined the game`, 'join');
+        refreshGame();
+      } else if (ge.event === 'powerup_purchased') {
+        addFeed('game-feed', `${ge.data.player_name} bought a power-up ⚡ [${ge.data.mode}]`, 'game');
+        refreshGame();
+      }
+    }
+  };
+
+  // ── Init ────────────────────────────────────────────────────────────────────
+  buildLegend();
+  refreshProgress();
+  setInterval(refreshProgress, 8000);
+  setInterval(refreshGame, 10000);
+</script>
+</body>
+</html>

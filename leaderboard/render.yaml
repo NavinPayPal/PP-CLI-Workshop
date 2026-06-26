@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: paypal-workshop-leaderboard
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: leaderboard
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: QUEST_URL
+        # Set this to your quest server URL after deploying quest too.
+        value: http://localhost:3001
