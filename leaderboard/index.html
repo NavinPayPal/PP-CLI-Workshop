@@ -285,7 +285,7 @@
     <div class="progress-left" id="attendee-list">
       <div style="color:var(--dim);text-align:center;padding:3rem;font-size:1rem;">
         Waiting for attendees...<br><br>
-        <span style="font-size:0.8rem">Run: <span style="color:var(--cyan)">node cli/src/index.js workshop:checkin</span></span>
+        <span style="font-size:0.8rem">Run: <span style="color:var(--cyan)">node node-cli/src/index.js workshop:checkin</span></span>
       </div>
     </div>
 
@@ -316,7 +316,7 @@
           </div>
           <div class="stat-box stat-quests-box stat-orange">
             <div class="stat-val" id="stat-quests">0</div>
-            <div class="stat-lbl">Quest runs</div>
+            <div class="stat-lbl">IPC ✓</div>
           </div>
         </div>
       </div>
@@ -370,18 +370,16 @@
 <script>
   // ── State ───────────────────────────────────────────────────────────────────
   const TASKS = [
-    { id:'todo_1',           label:'TODO-1',          desc:'Add emitPrompt()',          section:'exercise', pts:10 },
-    { id:'todo_2',           label:'TODO-2',          desc:'Add isAgent()',             section:'exercise', pts:10 },
-    { id:'todo_3',           label:'TODO-3',          desc:'Add FlowState',             section:'exercise', pts:15 },
-    { id:'todo_4',           label:'TODO-4',          desc:'Add emitComplete()',        section:'exercise', pts:10 },
-    { id:'eval_pass',        label:'Evals ✓',         desc:'7/7 sandwich tests pass',  section:'eval',     pts:25 },
-    { id:'checkout_todo_1',  label:'PAY-1',           desc:'getAccessToken()',          section:'paypal',   pts:15 },
-    { id:'checkout_todo_2',  label:'PAY-2',           desc:'createOrder() v2 API',     section:'paypal',   pts:15 },
-    { id:'checkout_todo_3',  label:'PAY-3',           desc:'captureOrder()',            section:'paypal',   pts:15 },
-    { id:'checkout_todo_4',  label:'PAY-4',           desc:'emitComplete w/ receipt',  section:'paypal',   pts:10 },
-    { id:'checkout_eval',    label:'Checkout ✓',      desc:'All PayPal evals pass',    section:'eval',     pts:25 },
-    { id:'quest_play',       label:'quest:play',      desc:'Played a round',           section:'bonus',    pts:10 },
-    { id:'quest_checkout',   label:'Full Checkout',   desc:'Live PayPal demo done',    section:'bonus',    pts:15 },
+    { id:'mission_1',          label:'Mission 1',    desc:'Prompt events on stderr',        section:'exercise', pts:20 },
+    { id:'mission_2',          label:'Mission 2',    desc:'Interrupt & resume cleanly',     section:'exercise', pts:20 },
+    { id:'mission_3',          label:'Mission 3',    desc:'Flags + complete signal',        section:'exercise', pts:20 },
+    { id:'eval_pass',          label:'Evals ✓',      desc:'All 10 eval tests pass',         section:'eval',     pts:50 },
+    { id:'ipc_channel',        label:'IPC',          desc:'TPOK < 500 ms via socket',       section:'exercise', pts:30 },
+    { id:'tmux_launch',        label:'tmux',         desc:'Launched cockpit via tmux',      section:'exercise', pts:10 },
+    { id:'bonus_cli',          label:'Bonus CLI',    desc:'Drove a second CLI end-to-end',  section:'bonus',    pts:20 },
+    { id:'bonus_paypal_creds', label:'PAY-creds',    desc:'Credential prompts as events',   section:'paypal',   pts:15 },
+    { id:'bonus_paypal_button',label:'PAY-button',   desc:'Generated paypal-checkout.html', section:'paypal',   pts:10 },
+    { id:'bonus_paypal_eval',  label:'PayPal ✓',     desc:'All PayPal bonus evals pass',    section:'eval',     pts:5  },
   ];
 
   let progressData = { attendees: [] };
@@ -415,7 +413,7 @@
     document.getElementById('stat-attendees').textContent     = att.length;
     document.getElementById('stat-completions').textContent   = att.reduce((s, a) => s + (a.tasks?.length || 0), 0);
     document.getElementById('stat-evals').textContent         = att.filter((a) => a.tasks?.includes('eval_pass')).length;
-    document.getElementById('stat-quests').textContent        = att.filter((a) => a.tasks?.includes('quest_play')).length;
+    document.getElementById('stat-quests').textContent        = att.filter((a) => a.tasks?.includes('ipc_channel')).length;
 
     // Best TPOK and speed across attendees
     const tokenValues = att.map((a) => a.tokens).filter((t) => t !== null && t !== undefined);
@@ -428,7 +426,7 @@
     if (!att.length) {
       list.innerHTML = `<div style="color:var(--dim);text-align:center;padding:3rem;font-size:1rem;">
         Waiting for attendees...<br><br>
-        <span style="font-size:0.8rem">Run: <span style="color:var(--cyan)">node cli/src/index.js workshop:checkin</span></span>
+        <span style="font-size:0.8rem">Run: <span style="color:var(--cyan)">node node-cli/src/index.js workshop:checkin</span></span>
       </div>`;
       return;
     }

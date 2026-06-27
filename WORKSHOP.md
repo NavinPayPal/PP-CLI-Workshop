@@ -193,23 +193,23 @@ node node-cli/src/index.js workshop:checkin --name "Your Name" --task mission_1
 
 ### Scoring
 
-**Main exercise (180 pts)**
+**Main exercise (150 pts)**
 | Task ID | Points | When |
 |---------|--------|------|
-| `mission_1` | 30 | Prompt events on stderr |
-| `mission_2` | 30 | Interrupt & resume cleanly |
-| `mission_3` | 30 | Flags + complete signal |
+| `mission_1` | 20 | Prompt events on stderr |
+| `mission_2` | 20 | Interrupt & resume cleanly |
+| `mission_3` | 20 | Flags + complete signal |
 | `eval_pass` | 50 | All 10 eval tests pass |
-| `ipc_channel` | 40 | TPOK < 500 ms via socket |
+| `ipc_channel` | 30 | TPOK < 500 ms via socket |
 | `tmux_launch` | 10 | Launched cockpit via tmux |
 
-**Side quests (75 pts)**
+**Side quests (50 pts)**
 | Task ID | Points | When |
 |---------|--------|------|
-| `bonus_cli` | 25 | Drove a second CLI end-to-end |
-| `bonus_paypal_creds` | 20 | Credential prompts emitted as events |
-| `bonus_paypal_button` | 20 | Generated paypal-checkout.html with JS SDK |
-| `bonus_paypal_eval` | 10 | All PayPal bonus eval tests pass |
+| `bonus_cli` | 20 | Drove a second CLI end-to-end |
+| `bonus_paypal_creds` | 15 | Credential prompts emitted as events |
+| `bonus_paypal_button` | 10 | Generated paypal-checkout.html with JS SDK |
+| `bonus_paypal_eval` | 5 | All PayPal bonus eval tests pass |
 
 ---
 
